@@ -13,12 +13,6 @@ START, STOP = 0, 1
 
 everything = pygame.sprite.Group()
 
-class Time(pygame.sprite.Sprite):
-    def __init__(self, potato, groups):
-        super(Time, self).__init__()
-        self.image = pygame.Surface((X_MAX, 30))
-        self.rect = self.image.get_rect()
-
 
 class Knife(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
@@ -27,7 +21,7 @@ class Knife(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
 
-        self.velocity = random.randint(3, 10)
+        self.velocity = random.randint(3, 8)
 
         self.add(groups)
 
@@ -86,7 +80,7 @@ class Potato(pygame.sprite.Sprite):
                     y = -30
             self.rect.center = x, y
 
-    def steer(self, direction, operation):
+    def move(self, direction, operation):
         v = 10
         if operation == START:
             if direction in (UP, DOWN):
@@ -109,34 +103,39 @@ def main():
     
     screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
     enemies = pygame.sprite.Group()
-
     empty = pygame.Surface((X_MAX, Y_MAX))
+    
     clock = pygame.time.Clock()
+    seconds = 0 
+    pygame.time.set_timer(pygame.USEREVENT + 1, 1000)
+
+    pygame.font.init()
+    font = pygame.font.Font(None, 40)
 
     potato = Potato(everything)
     potato.add(everything)
 
+
     for i in range(10):
         pos = random.randint(0, X_MAX)
         Knife(pos, [everything, enemies])
-
-    while True:
-        clock.tick(30)
+    while not game_over:
+        clock.tick()
+        time = font.render("Time: " + str(pygame.timer.get_ticks()), 1, (255,255,255))
         # Check for input
         for event in pygame.event.get():
-            if event.type == QUIT or (
-                    event.type == KEYDOWN and event.key == K_ESCAPE):
-                sys.exit()
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                game_over = True
             if not game_over:
                 if event.type == KEYDOWN:
                     if event.key == K_DOWN:
-                        potato.steer(DOWN, START)
+                        potato.move(DOWN, START)
                     if event.key == K_LEFT:
-                        potato.steer(LEFT, START)
+                        potato.move(LEFT, START)
                     if event.key == K_RIGHT:
-                        potato.steer(RIGHT, START)
+                        potato.move(RIGHT, START)
                     if event.key == K_UP:
-                        potato.steer(UP, START)
+                        potato.move(UP, START)
                     if event.key == K_RETURN:
                         if potato.mega:
                             potato.mega -= 1
@@ -145,22 +144,31 @@ def main():
 
                 if event.type == KEYUP:
                     if event.key == K_DOWN:
-                        potato.steer(DOWN, STOP)
+                        potato.move(DOWN, STOP)
                     if event.key == K_LEFT:
-                        potato.steer(LEFT, STOP)
+                        potato.move(LEFT, STOP)
                     if event.key == K_RIGHT:
-                        potato.steer(RIGHT, STOP)
+                        potato.move(RIGHT, STOP)
                     if event.key == K_UP:
-                        potato.steer(UP, STOP)
+                        potato.move(UP, STOP)
 
         if len(enemies) < 20 and not game_over:
             pos = random.randint(0, X_MAX)
             Knife(pos, [everything, enemies])
 
+
         everything.clear(screen, empty)
         everything.update()
         everything.draw(screen)
         pygame.display.flip()
+
+        
+        
+
+    pygame.quit()
+    quit()
+
+
 
 
 main()
