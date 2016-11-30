@@ -1,6 +1,9 @@
-from pygame import *
-from pygame.sprite import *
-from random import *
+import random
+import sys
+
+import pygame
+from pygame.locals import Rect, DOUBLEBUF, QUIT, K_ESCAPE, KEYDOWN, K_DOWN, \
+    K_LEFT, K_UP, K_RIGHT, KEYUP, K_LCTRL, K_RETURN, FULLSCREEN
 
 X_MAX = 800
 Y_MAX = 600
@@ -8,58 +11,157 @@ Y_MAX = 600
 LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
 START, STOP = 0, 1
 
-bgcolor = (0,0,0)  
+everything = pygame.sprite.Group()
 
-class Knife(Sprite):
-    def __init__(self):
-        Sprite.__init__(self)
-        self.image = image.load("knife.bmp").convert_alpha()
+class Time(pygame.sprite.Sprite):
+    def __init__(self, potato, groups):
+        super(Time, self).__init__()
+        self.image = pygame.Surface((X_MAX, 30))
         self.rect = self.image.get_rect()
 
-    # move gold to a new random location
+
+class Knife(pygame.sprite.Sprite):
+    def __init__(self, x_pos, groups):
+        super(Knife, self).__init__()
+        self.image = pygame.image.load("knife.bmp").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = (x_pos, 0)
+
+        self.velocity = random.randint(3, 10)
+
+        self.add(groups)
+
     def update(self):
         x, y = self.rect.center
 
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
-            self.velocity = random.randint(3, 10)
+            self.velocity = random.randint(3, 8)
         else:
             x, y = x, y + self.velocity
 
         self.rect.center = x, y
 
+    def kill(self):
+        x, y = self.rect.center
+        super(EnemySprite, self).kill()
 
 
-class Potato(Sprite):
-	def __init__(self):
-		Sprite.__init__(self)
-		self.image = image.load("potato.bmp").convert_alpha()
-		self.rect = self.image.get_rect()
+class Potato(pygame.sprite.Sprite):
+    def __init__(self, groups):
+        super(Potato, self).__init__()
+        self.image = pygame.image.load("potato.bmp").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.center = (X_MAX/2, Y_MAX - 40)
+        self.dx = self.dy = 0
 
-	def update(self):
-		self.rect.center = mouse.get_pos()
+        self.groups = [groups]
 
+        self.mega = 1
+
+        self.autopilot = False
+        self.in_position = False
+        self.velocity = 2
+
+    def update(self):
+        x, y = self.rect.center
+
+        if not self.autopilot:
+            # Handle movement
+            self.rect.center = x + self.dx, y + self.dy
+
+        else:
+            if not self.in_position:
+                if x != X_MAX/2:
+                    x += (abs(X_MAX/2 - x)/(X_MAX/2 - x)) * 2
+                if y != Y_MAX - 100:
+                    y += (abs(Y_MAX - 100 - y)/(Y_MAX - 100 - y)) * 2
+
+                if x == X_MAX/2 and y == Y_MAX - 100:
+                    self.in_position = True
+            else:
+                y -= self.velocity
+                self.velocity *= 1.5
+                if y <= 0:
+                    y = -30
+            self.rect.center = x, y
+
+    def steer(self, direction, operation):
+        v = 10
+        if operation == START:
+            if direction in (UP, DOWN):
+                self.dy = {UP: -v,
+                           DOWN: v}[direction]
+
+            if direction in (LEFT, RIGHT):
+                self.dx = {LEFT: -v,
+                           RIGHT: v}[direction]
+
+        if operation == STOP:
+            if direction in (UP, DOWN):
+                self.dy = 0
+            if direction in (LEFT, RIGHT):
+                self.dx = 0
 
 
 def main():
-	init()
-	screen = display.set_mode((X_MAX, Y_MAX))
+    game_over = False
+    
+    screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
+    enemies = pygame.sprite.Group()
 
-	potato = Potato()
-	knife = Knife()
-	sprites = RenderPlain(knife, potato)
+    empty = pygame.Surface((X_MAX, Y_MAX))
+    clock = pygame.time.Clock()
 
-	while True:
-	    e = event.poll()
-	    if e.type == QUIT:
-	        quit()
-	        break
+    potato = Potato(everything)
+    potato.add(everything)
 
-	    screen.fill(bgcolor)
+    for i in range(10):
+        pos = random.randint(0, X_MAX)
+        Knife(pos, [everything, enemies])
 
-	    # update and redraw sprites
-	    sprites.update()
-	    sprites.draw(screen)
-	    display.update()
+    while True:
+        clock.tick(30)
+        # Check for input
+        for event in pygame.event.get():
+            if event.type == QUIT or (
+                    event.type == KEYDOWN and event.key == K_ESCAPE):
+                sys.exit()
+            if not game_over:
+                if event.type == KEYDOWN:
+                    if event.key == K_DOWN:
+                        potato.steer(DOWN, START)
+                    if event.key == K_LEFT:
+                        potato.steer(LEFT, START)
+                    if event.key == K_RIGHT:
+                        potato.steer(RIGHT, START)
+                    if event.key == K_UP:
+                        potato.steer(UP, START)
+                    if event.key == K_RETURN:
+                        if potato.mega:
+                            potato.mega -= 1
+                            for i in enemies:
+                                i.kill()
+
+                if event.type == KEYUP:
+                    if event.key == K_DOWN:
+                        potato.steer(DOWN, STOP)
+                    if event.key == K_LEFT:
+                        potato.steer(LEFT, STOP)
+                    if event.key == K_RIGHT:
+                        potato.steer(RIGHT, STOP)
+                    if event.key == K_UP:
+                        potato.steer(UP, STOP)
+
+        if len(enemies) < 20 and not game_over:
+            pos = random.randint(0, X_MAX)
+            Knife(pos, [everything, enemies])
+
+        everything.clear(screen, empty)
+        everything.update()
+        everything.draw(screen)
+        pygame.display.flip()
+
 
 main()
+		
