@@ -38,7 +38,7 @@ class Knife(pygame.sprite.Sprite):
 
     def kill(self):
         x, y = self.rect.center
-        super(EnemySprite, self).kill()
+        super(Knife, self).kill()
 
 
 class Potato(pygame.sprite.Sprite):
@@ -80,6 +80,7 @@ class Potato(pygame.sprite.Sprite):
                     y = -30
             self.rect.center = x, y
 
+
     def move(self, direction, operation):
         v = 10
         if operation == START:
@@ -97,8 +98,12 @@ class Potato(pygame.sprite.Sprite):
             if direction in (LEFT, RIGHT):
                 self.dx = 0
 
+    def hit(self, target):
+        return self.rect.colliderect(target)
+
 
 def main():
+
     game_over = False
     
     screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
@@ -119,56 +124,87 @@ def main():
     for i in range(10):
         pos = random.randint(0, X_MAX)
         Knife(pos, [everything, enemies])
+
+    
     while not game_over:
         clock.tick()
         # Check for input
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 game_over = True
-            if not game_over:
-                if event.type == KEYDOWN:
-                    if event.key == K_DOWN:
-                        potato.move(DOWN, START)
-                    if event.key == K_LEFT:
-                        potato.move(LEFT, START)
-                    if event.key == K_RIGHT:
-                        potato.move(RIGHT, START)
-                    if event.key == K_UP:
-                        potato.move(UP, START)
-                    if event.key == K_RETURN:
-                        if potato.mega:
-                            potato.mega -= 1
-                            for i in enemies:
-                                i.kill()
+            
+            if event.type == KEYDOWN:
+                if event.key == K_DOWN:
+                    potato.move(DOWN, START)
+                if event.key == K_LEFT:
+                    potato.move(LEFT, START)
+                if event.key == K_RIGHT:
+                    potato.move(RIGHT, START)
+                if event.key == K_UP:
+                    potato.move(UP, START)
+                # if event.key == K_RETURN:
+                #     if potato.mega:
+                #         potato.mega -= 1
+                #         for i in enemies:
+                #             i.kill()
 
-                if event.type == KEYUP:
-                    if event.key == K_DOWN:
-                        potato.move(DOWN, STOP)
-                    if event.key == K_LEFT:
-                        potato.move(LEFT, STOP)
-                    if event.key == K_RIGHT:
-                        potato.move(RIGHT, STOP)
-                    if event.key == K_UP:
-                        potato.move(UP, STOP)
+            if event.type == KEYUP:
+                if event.key == K_DOWN:
+                    potato.move(DOWN, STOP)
+                if event.key == K_LEFT:
+                    potato.move(LEFT, STOP)
+                if event.key == K_RIGHT:
+                    potato.move(RIGHT, STOP)
+                if event.key == K_UP:
+                    potato.move(UP, STOP)
+
+        hit_potato = pygame.sprite.spritecollide(potato, enemies, True)
+        if hit_potato:
+            game_over = True
+            
 
         if len(enemies) < 20 and not game_over:
             pos = random.randint(0, X_MAX)
             Knife(pos, [everything, enemies])
 
+        wrap_around = False
+        
+        r = potato.rect
+        if r.left<0:
+            r.move_ip(800, 0)
+            wrap_around = 1
+        elif r.right > 800:
+            r.move_ip(-800, 0)
+            wrap_around = 1
+        if r.top < 0:
+            r.move_ip(0, 600)
+            wrap_around = 1
+        elif r.bottom > 600:
+            r.move_ip(0, -600)
+            wrap_around = 1
+        if wrap_around:
+            screen.blit(potato.image,r)
+            wrap_around = 0
+
+
+
         screen.fill((0,0,0))
-        time = font.render("Time: " + str(pygame.time.get_ticks()), 1, (255,255,255))
-        pygame.display.get_surface().blit(time, (400, 10))
+        time = font.render("Time: " + str(pygame.time.get_ticks() / 1000), 1, (255,255,255))
+        pygame.display.get_surface().blit(time, (325, 10))
 
         everything.clear(screen, empty)
         everything.update()
         everything.draw(screen)
         pygame.display.flip()
 
-        
-        
 
     pygame.quit()
     quit()
+
+
+                    
+        
+
 
 
 
