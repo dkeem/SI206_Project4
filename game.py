@@ -121,7 +121,6 @@ def main():
         Knife(pos, [everything, enemies])
     while not game_over:
         clock.tick()
-        time = font.render("Time: " + str(pygame.timer.get_ticks()), 1, (255,255,255))
         # Check for input
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
@@ -156,6 +155,9 @@ def main():
             pos = random.randint(0, X_MAX)
             Knife(pos, [everything, enemies])
 
+        screen.fill((0,0,0))
+        time = font.render("Time: " + str(pygame.time.get_ticks()), 1, (255,255,255))
+        pygame.display.get_surface().blit(time, (400, 10))
 
         everything.clear(screen, empty)
         everything.update()
