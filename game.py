@@ -11,7 +11,10 @@ Y_MAX = 600
 LEFT, RIGHT, UP, DOWN = 0, 1, 3, 4
 START, STOP = 0, 1
 
-everything = pygame.sprite.Group()
+BLACK = (  0,   0,   0)
+WHITE = (255, 255, 255)
+
+every_sprite = pygame.sprite.Group()
 
 
 class Knife(pygame.sprite.Sprite):
@@ -21,7 +24,7 @@ class Knife(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
 
-        self.velocity = random.randint(3, 8)
+        self.velocity = random.randint(1, 5)
 
         self.add(groups)
 
@@ -30,7 +33,7 @@ class Knife(pygame.sprite.Sprite):
 
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
-            self.velocity = random.randint(3, 8)
+            # self.velocity = random.randint(1, 5)
         else:
             x, y = x, y + self.velocity
 
@@ -102,37 +105,48 @@ class Potato(pygame.sprite.Sprite):
         return self.rect.colliderect(target)
 
 
-def main():
 
-    game_over = False
+def main():
     
+    pygame.init()
+    
+    #sets the dimension of the screen
     screen = pygame.display.set_mode((X_MAX, Y_MAX), DOUBLEBUF)
-    enemies = pygame.sprite.Group()
-    empty = pygame.Surface((X_MAX, Y_MAX))
-    
+
+    #Manage how fast screen updates
     clock = pygame.time.Clock()
-    seconds = 0 
+
+    #List of knives
+    knives = pygame.sprite.Group()
+
+    #Potato or the sprite you control
+    potato = Potato(every_sprite)
+    every_sprite.add(potato)
+
+    empty = pygame.Surface((X_MAX, Y_MAX))
+
+    #Sets timer of the game
     pygame.time.set_timer(pygame.USEREVENT + 1, 1000)
 
-    pygame.font.init()
+    #Creates the font for any text in the game
     font = pygame.font.Font(None, 40)
 
-    potato = Potato(everything)
-    potato.add(everything)
+    #Adds 5 knives to the screen at random -- This is "level one"
+    for i in range(5):
+        position = random.randint(0, X_MAX)
+        Knife(position, [every_sprite, knives])
 
-
-    for i in range(10):
-        pos = random.randint(0, X_MAX)
-        Knife(pos, [everything, enemies])
-
+    game_running = True
     
+
+    game_over = False
     while not game_over:
-        clock.tick()
         # Check for input
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 game_over = True
-            
+                break
+            #If key is press down, start moving
             if event.type == KEYDOWN:
                 if event.key == K_DOWN:
                     potato.move(DOWN, START)
@@ -148,6 +162,7 @@ def main():
                 #         for i in enemies:
                 #             i.kill()
 
+            #Once key is not pressed down, stop the movement
             if event.type == KEYUP:
                 if event.key == K_DOWN:
                     potato.move(DOWN, STOP)
@@ -158,56 +173,74 @@ def main():
                 if event.key == K_UP:
                     potato.move(UP, STOP)
 
-        hit_potato = pygame.sprite.spritecollide(potato, enemies, True)
-        if hit_potato:
-            game_over = True
-            
-
-        if len(enemies) < 20 and not game_over:
-            pos = random.randint(0, X_MAX)
-            Knife(pos, [everything, enemies])
-
-        wrap_around = False
-        
-        r = potato.rect
-        if r.left<0:
-            r.move_ip(800, 0)
-            wrap_around = 1
-        elif r.right > 800:
-            r.move_ip(-800, 0)
-            wrap_around = 1
-        if r.top < 0:
-            r.move_ip(0, 600)
-            wrap_around = 1
-        elif r.bottom > 600:
-            r.move_ip(0, -600)
-            wrap_around = 1
-        if wrap_around:
-            screen.blit(potato.image,r)
-            wrap_around = 0
-
-
-
-        screen.fill((0,0,0))
+        #Shows the time
+        screen.fill(BLACK)
         time = font.render("Time: " + str(pygame.time.get_ticks() / 1000), 1, (255,255,255))
         pygame.display.get_surface().blit(time, (325, 10))
 
-        everything.clear(screen, empty)
-        everything.update()
-        everything.draw(screen)
+        #"level two"
+        if (pygame.time.get_ticks() / 1000) > 5 and (pygame.time.get_ticks() / 1000) <= 10 and len(knives) <= 8:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(3,8)
+        #"level three"
+        elif (pygame.time.get_ticks() / 1000) > 10  and (pygame.time.get_ticks() / 1000) <= 15 and len(knives) <= 13:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(3,9)
+
+        elif (pygame.time.get_ticks() / 1000) > 15  and (pygame.time.get_ticks() / 1000) <= 20 and len(knives) <= 17:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(5,9)
+
+        elif (pygame.time.get_ticks() / 1000) > 20  and (pygame.time.get_ticks() / 1000) <= 30 and len(knives) <= 17:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(5,10)
+
+        elif (pygame.time.get_ticks() / 1000) > 30  and (pygame.time.get_ticks() / 1000) <= 60 and len(knives) <=20:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
+
+        elif (pygame.time.get_ticks() / 1000) > 60  and (pygame.time.get_ticks() / 1000) <= 100 and len(knives) <=27:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
+
+        elif (pygame.time.get_ticks() / 1000) > 100 and len(knives) <=34:
+            position = random.randint(0, X_MAX)
+            Knife(position, [every_sprite, knives])
+            Knife(position, [every_sprite, knives]).velocity = random.randint(7,15)
+
+
+
+        #See if potato collided with the knives
+        potato_got_cut = pygame.sprite.spritecollide(potato, knives, True)
+
+        #If potato collided with knives, game is basically over
+        
+            
+            
+
+
+    
+
+        every_sprite.clear(screen, empty)
+        every_sprite.update()
+        every_sprite.draw(screen)
         pygame.display.flip()
 
-
+    if potato_got_cut:
+        every_sprite.empty()
+        knives.empty()
+        main()
+    
     pygame.quit()
     quit()
 
 
                     
-        
-
-
-
-
-
 main()
 		
