@@ -16,7 +16,6 @@ WHITE = (255, 255, 255)
 
 every_sprite = pygame.sprite.Group()
 
-
 class Knife(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
         super(Knife, self).__init__()
@@ -39,9 +38,6 @@ class Knife(pygame.sprite.Sprite):
 
         self.rect.center = x, y
 
-    def kill(self):
-        x, y = self.rect.center
-        super(Knife, self).kill()
 
 
 class Potato(pygame.sprite.Sprite):
@@ -127,21 +123,29 @@ def main():
 
     #Sets timer of the game
     pygame.time.set_timer(pygame.USEREVENT + 1, 1000)
+    
+    #accumulates point
+    point_count = 0
 
     #Creates the font for any text in the game
     font = pygame.font.Font(None, 40)
+
+    #background music
+    pygame.mixer.music.load("song.wav")
+    pygame.mixer.music.play(-1, 0.0)
 
     #Adds 5 knives to the screen at random -- This is "level one"
     for i in range(5):
         position = random.randint(0, X_MAX)
         Knife(position, [every_sprite, knives])
 
-    game_running = True
     
 
     game_over = False
     while not game_over:
         # Check for input
+        # clock.tick(60)
+        point_count += 1
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 game_over = True
@@ -173,43 +177,48 @@ def main():
                 if event.key == K_UP:
                     potato.move(UP, STOP)
 
-        #Shows the time
+        #Shows the points you accumulated and divided by 25 to make points smaller
         screen.fill(BLACK)
-        time = font.render("Time: " + str(pygame.time.get_ticks() / 1000), 1, (255,255,255))
-        pygame.display.get_surface().blit(time, (325, 10))
+        points = font.render("POINTS: " + str(point_count//25), 1, (255,255,255))
+        pygame.display.get_surface().blit(points, (325, 10))
 
-        #"level two"
-        if (pygame.time.get_ticks() / 1000) > 5 and (pygame.time.get_ticks() / 1000) <= 10 and len(knives) <= 8:
+        #"level two" based on how many points you've accumulated
+        if (point_count//25) > 5 and (point_count//25) <= 10 and len(knives) <= 8:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(3,8)
         #"level three"
-        elif (pygame.time.get_ticks() / 1000) > 10  and (pygame.time.get_ticks() / 1000) <= 15 and len(knives) <= 13:
+        elif (point_count//25) > 10  and (point_count//25) <= 15 and len(knives) <= 13:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(3,9)
 
-        elif (pygame.time.get_ticks() / 1000) > 15  and (pygame.time.get_ticks() / 1000) <= 20 and len(knives) <= 17:
+        #"level four"
+        elif (point_count//25) > 15  and (point_count//25) <= 20 and len(knives) <= 17:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(5,9)
 
-        elif (pygame.time.get_ticks() / 1000) > 20  and (pygame.time.get_ticks() / 1000) <= 30 and len(knives) <= 17:
+        #"level five"
+        elif (point_count//25) > 20  and (point_count//25) <= 30 and len(knives) <= 17:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(5,10)
 
-        elif (pygame.time.get_ticks() / 1000) > 30  and (pygame.time.get_ticks() / 1000) <= 60 and len(knives) <=20:
+        #"level six"
+        elif (point_count//25) > 30  and (point_count//25) <= 60 and len(knives) <=20:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
 
-        elif (pygame.time.get_ticks() / 1000) > 60  and (pygame.time.get_ticks() / 1000) <= 100 and len(knives) <=27:
+        #"level seven"
+        elif (point_count//25) > 60  and (point_count//25) <= 100 and len(knives) <=27:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
 
-        elif (pygame.time.get_ticks() / 1000) > 100 and len(knives) <=34:
+        #"level eight"
+        elif (point_count//25) > 100 and len(knives) <=34:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
             Knife(position, [every_sprite, knives]).velocity = random.randint(7,15)
@@ -220,11 +229,22 @@ def main():
         potato_got_cut = pygame.sprite.spritecollide(potato, knives, True)
 
         #If potato collided with knives, game is basically over
-        
-            
-            
+        if potato_got_cut:
+            pygame.mixer.music.stop()
+            pygame.mixer.Sound("SLICED.wav").play()
+            every_sprite.empty()
+            knives.empty()
+            pygame.mixer.music.load("song2.wav")
+            pygame.mixer.music.play(-1, 0.0)
+            for i in range(50):
+                fried_message = font.render("YOU GOT FRENCH-FRIED", 1, (WHITE))
+                pygame.display.get_surface().blit(fried_message, (245, 275))
+                end_points = font.render("YOU GOT " + str(point_count//25) + " POINTS", 1, (WHITE))
+                pygame.display.get_surface().blit(end_points, (250, 325))
+                pygame.display.flip()
 
-
+            main()
+            
     
 
         every_sprite.clear(screen, empty)
@@ -232,15 +252,12 @@ def main():
         every_sprite.draw(screen)
         pygame.display.flip()
 
-    if potato_got_cut:
-        every_sprite.empty()
-        knives.empty()
-        main()
     
     pygame.quit()
     quit()
 
 
-                    
-main()
+if __name__ == "__main__":
+    while True:
+        main()
 		
