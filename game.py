@@ -1,3 +1,8 @@
+#NAME: David Kim
+#UNIQUENAME: dkeem
+#Project 4
+#GAME TITLE: French-Fried
+
 import random
 import sys
 
@@ -16,6 +21,7 @@ WHITE = (255, 255, 255)
 
 every_sprite = pygame.sprite.Group()
 
+#Knife sprite which you have to dodge
 class Knife(pygame.sprite.Sprite):
     def __init__(self, x_pos, groups):
         super(Knife, self).__init__()
@@ -23,23 +29,24 @@ class Knife(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x_pos, 0)
 
-        self.velocity = random.randint(1, 5)
+        #initial velocity of knives falling
+        self.speed = random.randint(1, 5)
 
         self.add(groups)
+
 
     def update(self):
         x, y = self.rect.center
 
         if y > Y_MAX:
             x, y = random.randint(0, X_MAX), 0
-            # self.velocity = random.randint(1, 5)
         else:
-            x, y = x, y + self.velocity
+            x, y = x, y + self.speed
 
         self.rect.center = x, y
 
 
-
+#The potato sprite that you control
 class Potato(pygame.sprite.Sprite):
     def __init__(self, groups):
         super(Potato, self).__init__()
@@ -50,57 +57,30 @@ class Potato(pygame.sprite.Sprite):
 
         self.groups = [groups]
 
-        self.mega = 1
-
-        self.autopilot = False
-        self.in_position = False
-        self.velocity = 2
 
     def update(self):
         x, y = self.rect.center
 
-        if not self.autopilot:
-            # Handle movement
-            self.rect.center = x + self.dx, y + self.dy
-
-        else:
-            if not self.in_position:
-                if x != X_MAX/2:
-                    x += (abs(X_MAX/2 - x)/(X_MAX/2 - x)) * 2
-                if y != Y_MAX - 100:
-                    y += (abs(Y_MAX - 100 - y)/(Y_MAX - 100 - y)) * 2
-
-                if x == X_MAX/2 and y == Y_MAX - 100:
-                    self.in_position = True
-            else:
-                y -= self.velocity
-                self.velocity *= 1.5
-                if y <= 0:
-                    y = -30
-            self.rect.center = x, y
+        self.rect.center = x + self.dx, y + self.dy
 
 
+    #determines how "fast" the sprite moves
     def move(self, direction, operation):
-        v = 10
+        distance = 10
         if operation == START:
             if direction in (UP, DOWN):
-                self.dy = {UP: -v,
-                           DOWN: v}[direction]
+                self.dy = {UP: -distance,
+                           DOWN: distance}[direction]
 
             if direction in (LEFT, RIGHT):
-                self.dx = {LEFT: -v,
-                           RIGHT: v}[direction]
+                self.dx = {LEFT: -distance,
+                           RIGHT: distance}[direction]
 
         if operation == STOP:
             if direction in (UP, DOWN):
                 self.dy = 0
             if direction in (LEFT, RIGHT):
                 self.dx = 0
-
-    def hit(self, target):
-        return self.rect.colliderect(target)
-
-
 
 def main():
     
@@ -160,12 +140,7 @@ def main():
                     potato.move(RIGHT, START)
                 if event.key == K_UP:
                     potato.move(UP, START)
-                # if event.key == K_RETURN:
-                #     if potato.mega:
-                #         potato.mega -= 1
-                #         for i in enemies:
-                #             i.kill()
-
+            
             #Once key is not pressed down, stop the movement
             if event.type == KEYUP:
                 if event.key == K_DOWN:
@@ -186,42 +161,42 @@ def main():
         if (point_count//25) > 5 and (point_count//25) <= 10 and len(knives) <= 8:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(3,8)
+            Knife(position, [every_sprite, knives]).speed = random.randint(3,8)
         #"level three"
         elif (point_count//25) > 10  and (point_count//25) <= 15 and len(knives) <= 13:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(3,9)
+            Knife(position, [every_sprite, knives]).speed = random.randint(3,9)
 
         #"level four"
         elif (point_count//25) > 15  and (point_count//25) <= 20 and len(knives) <= 17:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(5,9)
+            Knife(position, [every_sprite, knives]).speed = random.randint(5,9)
 
         #"level five"
         elif (point_count//25) > 20  and (point_count//25) <= 30 and len(knives) <= 17:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(5,10)
+            Knife(position, [every_sprite, knives]).speed = random.randint(5,10)
 
         #"level six"
         elif (point_count//25) > 30  and (point_count//25) <= 60 and len(knives) <=20:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
+            Knife(position, [every_sprite, knives]).speed = random.randint(7,10)
 
         #"level seven"
         elif (point_count//25) > 60  and (point_count//25) <= 100 and len(knives) <=27:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(7,10)
+            Knife(position, [every_sprite, knives]).speed = random.randint(7,10)
 
         #"level eight"
         elif (point_count//25) > 100 and len(knives) <=34:
             position = random.randint(0, X_MAX)
             Knife(position, [every_sprite, knives])
-            Knife(position, [every_sprite, knives]).velocity = random.randint(7,15)
+            Knife(position, [every_sprite, knives]).speed = random.randint(7,15)
 
 
 
